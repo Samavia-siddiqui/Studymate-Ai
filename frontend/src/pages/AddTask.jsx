@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import api from '../api/axios';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Sparkles, Plus, Calendar, Bookmark, Target, AlertCircle } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 const AddTask = () => {
   const { token } = useAuth();
@@ -44,8 +45,18 @@ const AddTask = () => {
 
     try {
       await api.post('/api/tasks', { subject, topic, deadline, priority });
-      // Redirect back to dashboard after success
-      navigate('/');
+      Swal.fire({
+        title: 'Target Created! 🎯',
+        text: 'Your study target has been created successfully.',
+        icon: 'success',
+        timer: 1800,
+        showConfirmButton: false,
+        background: '#faf7f2',
+        color: '#1b1c1c'
+      }).then(() => {
+        // Redirect back to dashboard after success
+        navigate('/');
+      });
     } catch (err) {
       console.error(err);
       setFormError('Failed to create task. Please try again.');

@@ -5,6 +5,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AddTask from './pages/AddTask';
+import Tasks from './pages/Tasks';
+import StudyPlan from './pages/StudyPlan';
+import Progress from './pages/Progress';
+import Focus from './pages/Focus';
 
 function App() {
   return (
@@ -24,6 +28,38 @@ function App() {
             element={
               <ProtectedRoute>
                 <AddTask />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/tasks" 
+            element={
+              <ProtectedRoute>
+                <Tasks />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/study-plan/:id" 
+            element={
+              <ProtectedRoute>
+                <StudyPlan />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/progress" 
+            element={
+              <ProtectedRoute>
+                <Progress />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/focus" 
+            element={
+              <ProtectedRoute>
+                <Focus />
               </ProtectedRoute>
             } 
           />
