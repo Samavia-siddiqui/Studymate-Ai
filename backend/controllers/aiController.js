@@ -1,6 +1,30 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import Task from '../models/Task.js';
 
+// Pehla model busy ho to agle try honge
+const MODELS = ['gemini-3.5-flash', 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+
+async function generateWithFallback(genAI, prompt) {
+  let lastError;
+  for (const name of MODELS) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: name,
+          generationConfig: { responseMimeType: 'application/json' },
+        });
+        return await model.generateContent(prompt);
+      } catch (err) {
+        lastError = err;
+        if (err.status === 404) break; // is naam ka model nahi mila, agla try karo
+        if (err.status !== 503 && err.status !== 429) throw err; // key/prompt ka masla, retry bekaar
+        await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      }
+    }
+  }
+  throw lastError;
+}
+
 // @desc    Generate 3-day study plan for a task using Gemini API
 // @route   POST /api/tasks/:id/generate-plan
 // @access  Private
@@ -25,12 +49,6 @@ export const generateStudyPlan = async (req, res) => {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    
-    // Using gemini-3.5-flash which is fast and supports JSON response format
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-3.5-flash',
-      generationConfig: { responseMimeType: 'application/json' },
-    });
 
     const prompt = `
       You are an expert academic tutor. Create a structured 3-day study plan to learn/prepare the topic "${task.topic}" for the subject "${task.subject}".
@@ -43,7 +61,7 @@ export const generateStudyPlan = async (req, res) => {
       Do not wrap the JSON in markdown code blocks. Return only raw JSON.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await generateWithFallback(genAI, prompt);
     const response = await result.response;
     const text = response.text();
 
@@ -66,9 +84,14 @@ export const generateStudyPlan = async (req, res) => {
     }
   } catch (error) {
     console.error('Gemini API Error:', error);
+    if (error.status === 503 || error.status === 429) {
+      return res.status(503).json({
+        message: 'AI is busy right now, please try again in a minute.',
+      });
+    }
     return res.status(500).json({
       message: 'Failed to generate study plan from Gemini API.',
-      error: error.message
+      error: error.message,
     });
   }
 };
