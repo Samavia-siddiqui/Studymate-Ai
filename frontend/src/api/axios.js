@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://studymate-ai-1-gr8u.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_URL || 'https://studymate-ai-1-gr8u.onrender.com',
 });
 
 // Request interceptor to add Authorization token dynamically
